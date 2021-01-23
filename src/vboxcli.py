@@ -9,7 +9,59 @@ This is under development
 
 import sys
 
-prompt = "vboxcli> "
+def createVM(vmname, ostype):
+    from vboxapi import VirtualBoxManager
+    mgr = VirtualBoxManager(None, None)
+    vbox = mgr.getVirtualBox()
+    name = vmname
+    vboxConstants = mgr.constants
+    mach = vbox.createMachine("", name, [], ostype, "") # ubuntu_64
+    mach.memorySize = 2048
+    # hdd = vbox.createMedium("vdi", "", vboxConstants.constants.AccessMode_ReadWrite, vboxConstants.constants.DeviceType_HardDisk)
+    mach.saveSettings()
+    print("created machine with UUID", mach.id)
+    vbox.registerMachine(mach)
+
+
+def deleteVM(vmname):
+    from vboxapi import VirtualBoxManager
+    mgr = VirtualBoxManager(None, None)
+    vbox = mgr.getVirtualBox()
+    name = vmname
+    vboxConstants = mgr.constants
+    mach = vbox.findMachine(name)
+    uuid = mach.id
+    print("removing machine ", mach.name, "with UUID", uuid)
+    # cmdClosedVm(ctx, mach, detachVmDevice, ["ALL"])
+    disks = mach.unregister(vboxConstants.CleanupMode_Full)
+    progress = mach.deleteConfig(disks)
+
+
+def startVM(vmname):
+    from vboxapi import VirtualBoxManager
+    mgr = VirtualBoxManager(None, None)
+    vbox = mgr.getVirtualBox()
+    name = vmname
+    mach = vbox.findMachine(name)
+    session = mgr.getSessionObject(vbox)
+    progress = mach.launchVMProcess(session, "gui", [])
+    progress.waitForCompletion(-1)
+    mgr.closeMachineSession(session)
+
+
+def stopVM(vmname):
+    from vboxapi import VirtualBoxManager
+    mgr = VirtualBoxManager(None, None)
+    vbox = mgr.getVirtualBox()
+    name = vmname
+    mach = vbox.findMachine(name)
+    session = mgr.getSessionObject(vbox)
+    vboxConstants = mgr.constants
+    mach.lockMachine(session, vboxConstants.LockType_Shared)
+    console = session.console
+    console.powerDown()
+    session.unlockMachine()
+    # mgr.closeMachineSession(session)
 
 
 def main():
@@ -20,16 +72,20 @@ def main():
     if action == 'createvm':
         vmname = sys.argv[2]
         ostype = sys.argv[3]
-        print("VM " + vmname + " created successfully.")
+        createVM(vmname, ostype)
+        print("VM " + vmname + " was created successfully.")
     elif action == 'deletevm':
         vmname = sys.argv[2]
-        print("VM " + vmname + " deleted successfully.")
+        deleteVM(vmname)
+        print("VM " + vmname + " was deleted successfully.")
     elif action == 'startvm':
         vmname = sys.argv[2]
-        print("VM " + vmname + " started successfully.")
+        startVM(vmname)
+        print("VM " + vmname + " was started successfully.")
     elif action == 'stopvm':
         vmname = sys.argv[2]
-        print("VM " + vmname + " stopped successfully.")
+        print("VM " + vmname + " was stopped successfully.")
+        stopVM(vmname)
 
 
 if __name__ == '__main__':
