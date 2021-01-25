@@ -5,6 +5,11 @@ This program is a simple command line for VirtualBox. You can run commands
 to create, delete, start and stop VMs.
 
 This is under development
+
+TO DO:
+1. Adding functionality to list VMs
+2. Refactoring import calls for each method
+3. Improving createVM method
 """
 
 import sys
