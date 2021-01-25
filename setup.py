@@ -40,4 +40,7 @@ setup(
     platforms="Unix",
     packages=["vboxcli"],
     include_package_data=True,
+    entry_points={
+        'console_scripts': ['vboxcli = vboxcli.vboxcli:main']
+    }
 )
